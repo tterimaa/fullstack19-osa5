@@ -1,9 +1,12 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Notification from './components/Notification'
 import Blog from './components/Blog'
+import Blogform from './components/Blogform'
+import Toggleable from './components/Togglable'
 import './index.css'
+import Loginform from './components/Loginform'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -19,24 +22,23 @@ const App = () => {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    console.log('mounting')
     getBlogs()
-}, [])
+  }, [])
 
-useEffect(() => {
-  const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
-  if (loggedUserJSON) {
-    const user = JSON.parse(loggedUserJSON)
-    setUser(user)
-    blogService.setToken(user.token)
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setUser(user)
+      blogService.setToken(user.token)
+    }
+  }, [])
+
+  const getBlogs = async () => {
+    const blogs = await blogService.getAll()
+    blogs.sort((a,b) => b.likes - a.likes)
+    setBlogs(blogs)
   }
-}, [])
-
-const getBlogs = () => {
-  blogService
-    .getAll()
-    .then(initialBlogs => setBlogs(initialBlogs))
-}
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -59,79 +61,20 @@ const getBlogs = () => {
   }
 
   const showNotification = (notificationText, type) => {
-    console.log(notificationText, type)
-    const timeOutTime = 5000;
+    const timeOutTime = 5000
 
     const newMessage = {
       text: notificationText,
       type: type
     }
     const emptyMessage = {
-      text: "",
-      type: ""
+      text: '',
+      type: ''
     }
     setNotification(newMessage)
     setTimeout(() => {
       setNotification(emptyMessage)
     }, timeOutTime)
-  }
-
-  const loginForm = () => {
-    return (
-    <div>
-    <h1>Log in to application</h1>
-    <form onSubmit={handleLogin}>
-        <div>
-          username
-            <input
-            type="text"
-            value={username}
-            name="Username"
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </div>
-        <div>
-          password
-            <input
-            type="password"
-            value={password}
-            name="Password"
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </div>
-        <button type="submit">login</button>
-      </form>
-      </div>
-    )
-  }
-
-  const blogForm = () => {
-    return (
-      <form onSubmit={addBlog}>
-        <div>
-          Title
-          <input
-          value={newBlogTitle}
-          onChange={({ target }) => setNewBlogTitle(target.value)}
-          />
-        </div>
-        <div>
-          Author
-          <input
-          value={newBlogAuthor}
-          onChange={({ target }) => setNewBlogAuthor(target.value)}
-          />
-        </div>
-        <div>
-          Url
-          <input
-          value={newBlogUrl}
-          onChange={({ target }) => setNewBlogUrl(target.value)}
-          />
-        </div>
-        <button type='submit'>Save</button>
-      </form>
-    )
   }
 
   const addBlog = event => {
@@ -140,7 +83,7 @@ const getBlogs = () => {
       title: newBlogTitle,
       author: newBlogAuthor,
       url: newBlogUrl
-    } 
+    }
     blogService
       .add(newBlog)
       .then(() => {
@@ -152,11 +95,27 @@ const getBlogs = () => {
       })
   }
 
-  const rows = () => blogs.map(blog =>
-    <Blog
-    blog={blog}
-    />
-  )
+  const handleLike = async blog => {
+    await blogService.like(blog)
+    getBlogs()
+  }
+
+  const removeBlog = async blog => {
+    await blogService.remove(blog)
+    getBlogs()
+  }
+
+  const rows = () => {
+    return blogs.map(blog =>
+      <Blog
+        blog={blog}
+        key={blog.id}
+        likeHandler={handleLike}
+        removeHandler={removeBlog}
+        showRemove={user.id === blog.user.id ? true : false}
+      />
+    )
+  }
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogAppUser')
@@ -167,21 +126,37 @@ const getBlogs = () => {
     <div>
       <Notification text={notification.text} type={notification.type} />
 
-      {user === null ? 
-      loginForm()
-      : <div>
-        <p>{user.name} logged in
-          <button onClick={handleLogout}>Log out</button>
-        </p>
-        {blogForm()}
-        <h1>Blogs</h1>
-        <ul>
-          {rows()}
-        </ul>
+      {user === null ?
+        <Loginform
+          handleLogin={handleLogin}
+          username={username}
+          setUsername={setUsername}
+          password={password}
+          setPassword={setPassword}
+        />
+        : <div>
+          <p>{user.name} logged in
+            <button onClick={handleLogout}>Log out</button>
+          </p>
+          <Toggleable buttonLabel='new blog'>
+            <Blogform
+              submit={addBlog}
+              changeTitle={setNewBlogTitle}
+              changeAuthor={setNewBlogAuthor}
+              changeUrl={setNewBlogUrl}
+              titleValue={newBlogTitle}
+              authorValue={newBlogAuthor}
+              urlValue={newBlogUrl}
+            />
+          </Toggleable>
+          <h1>Blogs</h1>
+          <ul>
+            {rows()}
+          </ul>
         </div>
       }
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

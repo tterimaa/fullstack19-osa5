@@ -14,10 +14,32 @@ const getAll = () => {
 
 const add = blog => {
   const config = {
-    headers: {Authorization: token}
+    headers: { Authorization: token }
   }
   const request = axios.post(baseUrl, blog, config)
   return request.then(response => response.data)
 }
 
-export default { getAll, add, setToken }
+const like = async blog => {
+  blog.likes = blog.likes + 1
+  try {
+    const response = await axios.put(`${baseUrl}/${blog.id}`, blog)
+    return response
+  } catch(exception) {
+    console.log(exception)
+  }
+}
+
+const remove = async blog => {
+  const config = {
+    headers: { Authorization: token }
+  }
+  try {
+    const response = await axios.delete(`${baseUrl}/${blog.id}`, config)
+    return response
+  } catch(exception) {
+    console.log(exception)
+  }
+}
+
+export default { getAll, add, setToken, like, remove }
