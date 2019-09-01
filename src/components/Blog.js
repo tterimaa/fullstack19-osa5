@@ -17,7 +17,7 @@ const Blog = ({
   }
 
   return (
-    <div onClick={toggleInfo}>
+    <div onClick={toggleInfo} className='blogContainer'>
       {info
         ? <div>
           <p>{blog.title} {blog.author}</p>
