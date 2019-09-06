@@ -7,6 +7,7 @@ import Blogform from './components/Blogform'
 import Toggleable from './components/Togglable'
 import './index.css'
 import Loginform from './components/Loginform'
+import { useField } from './hooks'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -17,8 +18,8 @@ const App = () => {
     text: '',
     type: ''
   })
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const username = useField('text')
+  const password = useField('password')
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -44,7 +45,8 @@ const App = () => {
     event.preventDefault()
     try {
       const user = await loginService.login({
-        username, password
+        username: username.value,
+        password: password.value
       })
       window.localStorage.setItem(
         'loggedBlogAppUser', JSON.stringify(user)
@@ -52,8 +54,8 @@ const App = () => {
       showNotification('log in successfull', 'success')
       blogService.setToken(user.token)
       setUser(user)
-      setUsername('')
-      setPassword('')
+      username.reset()
+      password.reset()
     } catch(exception) {
       console.log(exception)
       showNotification('wrong credentials', 'error')
@@ -130,9 +132,7 @@ const App = () => {
         <Loginform
           handleLogin={handleLogin}
           username={username}
-          setUsername={setUsername}
           password={password}
-          setPassword={setPassword}
         />
         : <div>
           <p>{user.name} logged in

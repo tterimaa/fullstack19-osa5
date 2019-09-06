@@ -1,12 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import CustomInput from './CustomInput'
 
 const Loginform = ({
   handleLogin,
   username,
-  setUsername,
-  password,
-  setPassword
+  password
 }) => {
   return (
     <div>
@@ -14,20 +13,14 @@ const Loginform = ({
       <form onSubmit={handleLogin}>
         <div>
           username
-          <input
-            type="text"
-            value={username}
-            name="Username"
-            onChange={({ target }) => setUsername(target.value)}
+          <CustomInput
+            {...username}
           />
         </div>
         <div>
           password
-          <input
-            type="password"
-            value={password}
-            name="Password"
-            onChange={({ target }) => setPassword(target.value)}
+          <CustomInput
+            {...password}
           />
         </div>
         <button type="submit">login</button>
@@ -38,10 +31,8 @@ const Loginform = ({
 
 Loginform.propTypes = {
   handleLogin: PropTypes.func.isRequired,
-  setUsername: PropTypes.func.isRequired,
-  setPassword: PropTypes.func.isRequired,
-  username: PropTypes.string.isRequired,
-  password: PropTypes.string.isRequired
+  username: PropTypes.object.isRequired,
+  password: PropTypes.object.isRequired
 }
 
 export default Loginform
